@@ -1,9 +1,9 @@
 <?php
 // Change this to your connection info.
-$DATABASE_HOST = 'localhost';
-$DATABASE_USER = 'root';
-$DATABASE_PASS = '';
-$DATABASE_NAME = 'bridgewater';
+$DATABASE_HOST = 'sql300.unaux.com';
+$DATABASE_USER = 'unaux_34978643';
+$DATABASE_PASS = 'Edwin1234@';
+$DATABASE_NAME = 'unaux_34978643_bridgewaterfinancial';
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 if (mysqli_connect_errno()) {
@@ -124,7 +124,6 @@ if ($stmt = $con->prepare('SELECT id FROM accounts WHERE username = ?')) {
             if ($stmt->execute()) {
                 if ($stmt->affected_rows > 0) {
                     echo   'You have successfully registered! You can now <a href="sign-in.html">login</a>.';
-                    // Redirect to sign-in.html after a delay (in seconds)
                     header("refresh:3;url=sign-in.html");
                 } else {
                     echo  'Registration failed. Please try again.';

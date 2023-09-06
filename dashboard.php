@@ -30,29 +30,43 @@ if (isset($_SESSION['id'])) {
       // Handle the case when the prepared statement couldn't be created
       echo 'Could not prepare statement!';
   }
-  $query = "SELECT * FROM transactions WHERE user_id = ? AND (transaction_type = 'Deposit' OR transaction_type = 'Transfer')";
-$stmt = $con->prepare($query);
-$stmt->bind_param('i', $userId);
-$stmt->execute();
-$transactions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+  $query = "SELECT * FROM transactions WHERE user_id = ? AND (transaction_type = 'Deposit' OR transaction_type = 'Transfer') ORDER BY id DESC";
+  $stmt = $con->prepare($query);
+  $stmt->bind_param('i', $userId);
+  $stmt->execute();
+  $transactions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+  
 } else {
   // Handle the case when the user is not logged in
   header('Location: login.php');
   exit;
 }
 ?>
+
 <!DOCTYPE html>
 <html>
     <head>
   <!--TITLE-->
-  <title>Profile</title>
+  <title>Dashboard</title>
   <style>
     body{
       font-family: "Inter";
       font-size: 14px;
     }
-  #details > div{
-    border-bottom: 1px solid #780b54de;
+  #overview{
+    display: flex;
+  flex-direction: row;
+  justify-content:start;
+  align-items: center;
+  flex-wrap: wrap;
+ 
+  }
+  #overview > div{
+height: 250px;
+width: 30%;
+margin: 10px;
+border-radius: 8px;
+margin-right: 90px;
   }
   </style>
     <!--ICON-->
@@ -66,6 +80,7 @@ $transactions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
       </head>
       <body>
+
 
 <div id="dashbod1" >
 <div style="height: 70px;border-bottom: 3px solid #780b54de;;">
@@ -127,80 +142,60 @@ $transactions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
  
 <!--  -->
-<div id="underdash" >
-<div id="one" class="standby" style="height: 1100px;"> 
-    <h1 style="color: #780b54de;">My Profile</h1>
- <p style="color: #cf1c93de;">You have full control to manage your own account setting</p>  
-
-<div style="border: 0.5px solid #780b54de;border-radius: 7px;padding: 10px;font-size: 12px;color: rgb(207, 79, 19);">
-<p>When you're on public Wi-Fi, hackers can more easily access your computer and steal personal information from it. You should never access your Online Service through a computer, tablet, or mobile phone unless you're on a secure Wi-Fi network with a password, or using your own cell phone data connection. This is much more difficult for thieves to hack, so it keeps your information safer.</p>
- </div>
-
-<h2 style="color: #780b54de;">Personal Information</h2>
-
-<div style="border: 1px solid #ea6abfde;padding:30px" id="details">
+<div id="underdash">
+<div id="one" class="standby">
+<div style="border:1px solid #e9bad9de;height: 90px;"  id="union1" >
+  <div style="height: 80px;color: #3c0429de;padding-bottom: 20px;">
+  <p style="font-size: 19px;">Greetings! how are you doing today? </p>
+<p id="p">Here is the summary of your account at a glance !</p></div>
+<!--  -->
+<div style="height: 80px;">
+  <button id="btn11"><i class="fa fa-money"></i><a href="dashboard3.php" style="color: white;text-decoration: none;"> TRANSFER</a></button>
+  <button id="btn22" ><i class="fa fa-toggle-down"></i><a href="deposit.php" style="color: white;text-decoration: none;"> Deposit</a></button>
+</div>
+</div>
+<h2 style="color: #780b54de;font-size: 18px;">Overview</h2>
 <div>
-    <h4>Profile picture:</h4>
-    <p><img src="<?=$imagePath?>" alt="Profile Image" width="200px" style="border-radius:50px" ></p>
+  <div style="background-color:#780b54de;;border-radius: 7px;color:white;padding:20px;" id="overview">
+<div>   
+  <p><img src="<?=$imagePath?>" alt="Profile Image" width="300px" height="230px" style="border-radius:10px;border:2px solid #780b54de;" ></p>
+</div>
+<div >  
+  <h2>WELCOME!</h2>
+    <h1><?=$firstName?> <?=$lastName?></h1>
+    <h4 id="p">State security Number=<?=$statesecurityNumber?></h4>
+    <h1>Balance=$<?=$balance?></h1></div>
+</div>
 </div>
 
 
- <div>
-  <h4>Username:</h4>
-   <p> <?=$username?></p>   </div>
+
+<!--  -->
+<h2 style="color: #780b54de;font-size: 18px;">Recent Transaction Activities</h2>
+<div style="border: 1px solid #f19fd5de;height: 500px;border-radius: 7px;padding:10px;overflow: auto">
+<?php foreach ($transactions as $transaction): ?>
+            
+            Transaction Type: <?php echo $transaction['transaction_type']; ?>|
+            Transaction ID: <?php echo $transaction['id']; ?>|
+            Account Number: <?php echo $transaction['account_number']; ?>|
+            Account Name: <?php echo $transaction['account_name']; ?>|
+            Amount: <?php echo $transaction['amount']; ?>|
+            Date: <?php echo $transaction['transaction_date']; ?>
         
-    
-  <div><h4>First Name:</h4>     
-     <p> <?=$firstName?></p> </div>  
-   
- <div> <h4>Last Name:</h4>
- <p><?=$lastName?></p></div>      
-        
- <div>
-    <h4>Other Name:</h4>
-    <p><?=$otherName?></p>
+        <hr>
+    <?php endforeach; ?>
 </div>
-
-<div>
-    <h4>Email:</h4>
-    <p><?=$email?></p>
-</div>
-
-<div>
-    <h4>Phone Number:</h4>
-    <p><?=$phoneNumber?></p>
-</div>
-
-<div>
-    <h4>Date of Birth:</h4>
-    <p><?=$dateOfBirth?></p>
-</div>
-
-<div>
-    <h4>Residential Address:</h4>
-    <p><?=$residentialAddress?></p>
-</div>
-
-<div>
-    <h4>State Security Number:</h4>
-    <p><?=$statesecurityNumber?></p>
-</div>
-
-<div>
-    <h4>Next of Kin Name:</h4>
-    <p><?=$nextofkinName?></p>
-</div>
-
-
-</div>
-<div style="width: 70%;padding-left:20px;color: #780b54de;">
+<br>
+<div style="height: 150px;border: 1px solid #f19fd5de;border-radius: 7px;padding: 10px;">
+ 
+ <div style="width: 70%;padding-left:20px;color: #780b54de;">
 <h2 style="color: #470531de;"> We’re here to help you!</h2>
  <p>Ask a question or file a support ticket, manage request, report an issues. Our team support team will get back to you by email.
 </p> 
-
+<button id="support" ><b>Contact support</b></button>
 </div> 
-
-<hr>
+</div>
+<div style="border-bottom: 1px solid #ec7ac6de;;margin-top: 10px;"></div>
 <div style="height: 100px;color: #1f0316de;">
 <p>© 2023 Bridgewater Financial Union - All rights reserved.</p>
 </div>
@@ -208,6 +203,14 @@ $transactions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 </div>
 </div>
 </div>
+
+
+   
+   
+  
+
+
+
 
 
 

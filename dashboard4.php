@@ -5,10 +5,10 @@ if (!isset($_SESSION['loggedin'])) {
 	header('Location: sign-in.html');
 	exit;
 }
-$DATABASE_HOST = 'localhost';
-$DATABASE_USER = 'root';
-$DATABASE_PASS = '';
-$DATABASE_NAME = 'bridgewater';
+$DATABASE_HOST = 'sql300.unaux.com';
+$DATABASE_USER = 'unaux_34978643';
+$DATABASE_PASS = 'Edwin1234@';
+$DATABASE_NAME = 'unaux_34978643_bridgewaterfinancial';
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 if (mysqli_connect_errno()) {
