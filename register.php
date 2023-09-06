@@ -1,9 +1,9 @@
 <?php
 // Change this to your connection info.
-$DATABASE_HOST = 'sql300.unaux.com';
-$DATABASE_USER = 'unaux_34978643';
+$DATABASE_HOST = 'sql112.byethost8.com';
+$DATABASE_USER = 'b8_34979102';
 $DATABASE_PASS = 'Edwin1234@';
-$DATABASE_NAME = 'unaux_34978643_bridgewaterfinancial';
+$DATABASE_NAME = 'b8_34979102_bridgewater';
 // Try and connect using the info above.
 $con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
 if (mysqli_connect_errno()) {
