@@ -1,16 +1,13 @@
 <?php
 // Change this to your connection info.
-$DATABASE_HOST = 'sql112.byethost8.com';
-$DATABASE_USER = 'b8_34979102';
-$DATABASE_PASS = 'Edwin1234@';
-$DATABASE_NAME = 'b8_34979102_bridgewater';
-// Try and connect using the info above.
-$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if (mysqli_connect_errno()) {
-	// If there is an error with the connection, stop the script and display the error.
-	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
-}
+$POSTGRES_CONNECTION_STRING = "postgres://default:FoQMG0CR6IWE@ep-muddy-art-24176362.ap-southeast-1.postgres.vercel-storage.com:5432/verceldb";
 
+// Attempt to connect to PostgreSQL using the connection string
+$con = pg_connect($POSTGRES_CONNECTION_STRING);
+
+if (!$con) {
+    exit('Failed to connect to PostgreSQL: ' . pg_last_error());
+}
 
 $requiredFields = [
     'firstName',
@@ -28,7 +25,7 @@ $requiredFields = [
 
 foreach ($requiredFields as $field) {
     if (!isset($_POST[$field]) || empty($_POST[$field])) {
-       echo 'Please complete the registration form';
+        echo 'Please complete the registration form';
         break;
     }
 }
@@ -59,7 +56,6 @@ if (!move_uploaded_file($_FILES['image']['tmp_name'], $uploadedFilePath)) {
 
 $imagePath = $uploadedFilePath;
 
-
 if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
     echo  'Email is not valid!';
 }
@@ -69,6 +65,7 @@ if (preg_match('/^[a-zA-Z0-9]+$/', $_POST['username']) == 0) {
 if (strlen($_POST['password']) > 20 || strlen($_POST['password']) < 5) {
     echo  'Password must be between 5 and 20 characters long!';
 }
+
 // We need to check if the account with that username exists.
 if ($stmt = $con->prepare('SELECT id FROM accounts WHERE username = ?')) {
     // Bind parameters (s = string), bind the username.
@@ -80,7 +77,7 @@ if ($stmt = $con->prepare('SELECT id FROM accounts WHERE username = ?')) {
         // Username already exists
         echo  'Username exists, please choose another!';
     } else {
-        // Username doesn't exist, insert new account
+        // Username doesn't exist, insert a new account
         if ($stmt = $con->prepare(
             'INSERT INTO accounts (
                 firstName,
@@ -119,8 +116,6 @@ if ($stmt = $con->prepare('SELECT id FROM accounts WHERE username = ?')) {
                 $balance
             );
             
-            
-            
             if ($stmt->execute()) {
                 if ($stmt->affected_rows > 0) {
                     echo   'You have successfully registered! You can now <a href="sign-in.html">login</a>.';
@@ -133,12 +128,12 @@ if ($stmt = $con->prepare('SELECT id FROM accounts WHERE username = ?')) {
             }
             
         } else {
-            echo   'Could not prepare statement!';
+            echo   'Could not prepare the statement!';
         }
     }
     $stmt->close();
 } else {
-    echo   'Could not prepare statement!';
+    echo   'Could not prepare the statement!';
 }
 
 $con->close();

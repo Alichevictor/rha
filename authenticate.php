@@ -1,84 +1,112 @@
 <?php
 session_start();
 // Change this to your connection info.
-$DATABASE_HOST = 'sql112.byethost8.com';
-$DATABASE_USER = 'b8_34979102';
-$DATABASE_PASS = 'Edwin1234@';
-$DATABASE_NAME = 'b8_34979102_bridgewater';
-// Try and connect using the info above.
-$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if ( mysqli_connect_errno() ) {
-	// If there is an error with the connection, stop the script and display the error.
-	exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+$POSTGRES_CONNECTION_STRING = "host=ep-muddy-art-24176362.ap-southeast-1.postgres.vercel-storage.com port=5432 dbname=verceldb user=default password=FoQMG0CR6IWE";
+
+// Attempt to connect to PostgreSQL using the connection string
+$con = pg_connect($POSTGRES_CONNECTION_STRING);
+
+if (!$con) {
+    exit('Failed to connect to PostgreSQL: ' . pg_last_error());
 }
 
 // Now we check if the data from the login form was submitted, isset() will check if the data exists.
-if ( !isset($_POST['username'], $_POST['password']) ) {
-	// Could not get the data that should have been sent.
-	exit('Please fill both the username and password fields!');
+if (!isset($_POST['username'], $_POST['password'])) {
+    // Could not get the data that should have been sent.
+    exit('Please fill both the username and password fields!');
 }
+
 // Prepare our SQL, preparing the SQL statement will prevent SQL injection.
-if ($stmt = $con->prepare('SELECT id, password FROM accounts WHERE username = ?')) {
-	// Bind parameters (s = string, i = int, b = blob, etc), in our case the username is a string so we use "s"
-	$stmt->bind_param('s', $_POST['username']);
-	$stmt->execute();
-	// Store the result so we can check if the account exists in the database.
-	$stmt->store_result();
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $password);
-        $stmt->fetch();
-        // Account exists, now we verify the password.
-        // Note: remember to use password_hash in your registration file to store the hashed passwords.
-        if (password_verify($_POST['password'], $password)) {
-            // Verification success! User has logged-in!
-            // Retrieve the login history JSON from the database for the logged-in user
-$loginHistory = ''; // Initialize the variable
+$query = "SELECT \"id\", \"password\" FROM \"accounts\" WHERE \"username\" = $1";
 
-if ($stmt = $con->prepare('SELECT loginHistory FROM accounts WHERE id = ?')) {
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    $stmt->bind_result($loginHistory);
-    $stmt->fetch();
-    $stmt->close();
-}
+$result = pg_prepare($con, 'select_user', $query);
 
-         // Retrieve existing login history JSON
-         $loginHistoryJson = json_decode($loginHistory, true);
-    
-    // Add the current login time to the history
-         $loginHistoryJson[] = date('Y-m-d H:i:s');
-    
-    // Convert back to JSON and update the column
-         $updatedLoginHistory = json_encode($loginHistoryJson);
-    
-    // Update the loginHistory column in the accounts table
-    if ($stmt = $con->prepare('UPDATE accounts SET loginHistory = ? WHERE id = ?')) {
-        $stmt->bind_param('si', $updatedLoginHistory, $id);
-        $stmt->execute();
-        $stmt->close();
-    }
+if ($result) {
+    $result = pg_execute($con, 'select_user', array($_POST['username']));
 
-        sleep(3);
-            // Continue with the login process
-            // Create sessions, so we know the user is logged in; they basically act like cookies but remember the data on the server.
-            session_regenerate_id();
-            $_SESSION['loggedin'] = TRUE;
-            $_SESSION['name'] = $_POST['username'];
-            $_SESSION['id'] = $id;
-            header('Location: dashboard.php');
+    if ($result) {
+        $row = pg_fetch_assoc($result);
+
+        if ($row) {
+            $id = $row['id'];
+            $password = $row['password'];
+
+            // Account exists, now we verify the password.
+            // Note: remember to use password_hash in your registration file to store the hashed passwords.
+            if (password_verify($_POST['password'], $password)) {
+                // Verification success! User has logged-in!
+                // Retrieve the login history JSON from the database for the logged-in user
+                $loginHistory = ''; // Initialize the variable
+
+                $query = "SELECT \"loginHistory\" FROM \"accounts\" WHERE \"id\" = $1";
+
+                $result = pg_prepare($con, 'select_login_history', $query);
+
+                if ($result) {
+                    $result = pg_execute($con, 'select_login_history', array($id));
+
+                    if ($result) {
+                        $row = pg_fetch_assoc($result);
+
+                        if ($row) {
+                            $loginHistory = $row['loginHistory'];
+
+                            // Retrieve existing login history JSON
+                            $loginHistoryJson = json_decode($loginHistory, true);
+
+                            // Add the current login time to the history
+                            $loginHistoryJson[] = date('Y-m-d H:i:s');
+
+                            // Convert back to JSON and update the column
+                            $updatedLoginHistory = json_encode($loginHistoryJson);
+
+                            // Update the loginHistory column in the accounts table
+                            $query = "UPDATE \"accounts\" SET \"loginHistory\" = $1 WHERE \"id\" = $2";
+
+                            $result = pg_prepare($con, 'update_login_history', $query);
+
+                            if ($result) {
+                                $result = pg_execute($con, 'update_login_history', array($updatedLoginHistory, $id));
+
+                                if ($result) {
+                                    sleep(3);
+                                    // Continue with the login process
+                                    // Create sessions, so we know the user is logged in; they basically act like cookies but remember the data on the server.
+                                    session_regenerate_id();
+                                    $_SESSION['loggedin'] = TRUE;
+                                    $_SESSION['name'] = $_POST['username'];
+                                    $_SESSION['id'] = $id;
+                                    header('Location: dashboard.php');
+                                } else {
+                                    echo 'Login history update failed.';
+                                }
+                            } else {
+                                echo 'Could not prepare statement for login history update.';
+                            }
+                        } else {
+                            echo 'Login history not found.';
+                        }
+                    } else {
+                        echo 'Could not execute query for login history: ' . pg_last_error();
+                    }
+                } else {
+                    echo 'Could not prepare statement for login history: ' . pg_last_error();
+                }
+            } else {
+                // Incorrect password
+                echo 'Login failed. Please check your credentials.';
+            }
         } else {
-            // Incorrect password
+            // Incorrect username
             echo 'Login failed. Please check your credentials.';
         }
-        
     } else {
-        // Incorrect username
-        echo 'Login failed. Please check your credentials.';
+        echo 'Could not execute query: ' . pg_last_error();
     }
-    
-
-	$stmt->close();
+} else {
+    echo 'Could not prepare statement: ' . pg_last_error();
 }
 
-
+// Close the PostgreSQL connection when you're done
+pg_close($con);
 ?>

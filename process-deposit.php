@@ -1,12 +1,12 @@
 <?php
 session_start();
-$DATABASE_HOST = 'sql112.byethost8.com';
-$DATABASE_USER = 'b8_34979102';
-$DATABASE_PASS = 'Edwin1234@';
-$DATABASE_NAME = 'b8_34979102_bridgewater';
-$con = mysqli_connect($DATABASE_HOST, $DATABASE_USER, $DATABASE_PASS, $DATABASE_NAME);
-if (mysqli_connect_errno()) {
-    exit('Failed to connect to MySQL: ' . mysqli_connect_error());
+$POSTGRES_CONNECTION_STRING = "postgres://default:FoQMG0CR6IWE@ep-muddy-art-24176362.ap-southeast-1.postgres.vercel-storage.com:5432/verceldb";
+
+// Attempt to connect to PostgreSQL using the connection string
+$con = pg_connect($POSTGRES_CONNECTION_STRING);
+
+if (!$con) {
+    exit('Failed to connect to PostgreSQL: ' . pg_last_error());
 }
 
 $depositedAmount = $_POST['amount'];
@@ -15,7 +15,6 @@ $depositedAmount = $_POST['amount'];
 $frontImageName = $_FILES['frontImage']['name'];
 $backImageName = $_FILES['backImage']['name'];
 $uploadsDirectory = 'uploads/';
-
 
 // Check if the directory already exists
 if (!is_dir($uploadsDirectory)) {
@@ -44,10 +43,6 @@ if (isset($_FILES['backImage']) && is_uploaded_file($_FILES['backImage']['tmp_na
 } else {
     exit('Back image was not uploaded or not uploaded via HTTP POST');
 }
-
-
-
-
 
 $stmt = $con->prepare("SELECT balance FROM accounts WHERE id = ?");
 $stmt->bind_param('i', $_SESSION['id']);
