@@ -22,7 +22,7 @@ if (isset($_SESSION['id'])) {
   if ($stmt) {
       $stmt->bind_param('i', $userId);
       $stmt->execute();
-      $stmt->bind_result($imagePath, $firstName, $lastName, $otherName, $email, $phoneNumber, $dateOfBirth, $residentialAddress, $statesecurityNumber, $nextofkinName, $username, $password, $balance);
+      $stmt->bind_result( $firstName, $lastName, $otherName, $email, $phoneNumber, $dateOfBirth, $residentialAddress,  $nextofkinName, $username, $password, );
       $stmt->fetch();
       $stmt->close();
   } else {
